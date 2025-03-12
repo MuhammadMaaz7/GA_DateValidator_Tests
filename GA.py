@@ -1,4 +1,5 @@
 import re
+import random
 
 def is_valid_date(date_str):
     
@@ -34,4 +35,28 @@ def is_valid_date(date_str):
     
     return True
 
-print(is_valid_date("29/02/2025"))
+def initialize_population(pop_size):
+    population = []
+    count = 0
+    
+    while count < pop_size:
+        rand_day = str(random.randint(1,31)).zfill(2)
+        rand_month = str(random.randint(1,12)).zfill(2)
+        rand_year = str(random.randint(0000,9999)).zfill(4)
+        
+        date = rand_day + '/' + rand_month + '/' + rand_year 
+        print(date)
+        
+        if is_valid_date(date):
+            print("Valid date: ",date)
+            date_tuple = (rand_day,rand_month,rand_year)
+            population.append(date_tuple) 
+            count += 1
+        else:
+            print("Invalid date: ",date)
+            continue
+        
+    print(population)
+        
+
+initialize_population(100)
