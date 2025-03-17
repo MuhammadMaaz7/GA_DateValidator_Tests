@@ -1,0 +1,41 @@
+Test Case,Categories
+08/11/2809,30-day month
+30/09/8420,"Leap Year, 30-day month, day/month transitions"
+24/08/2591,31-day month
+31/12/4588,"Leap Year, 31-day month, day/month transitions"
+31/08/0000,"Leap Year, 31-day month, Min/Max Year, day/month transitions"
+23/10/8156,"Leap Year, 31-day month"
+26/06/3513,30-day month
+03/16/6656,"Leap Year, Month > 12"
+08/07/0100,31-day month
+08/07/0100,31-day month
+12/01/0000,"Leap Year, 31-day month, Min/Max Year"
+01/01/0100,"31-day month, day/month transitions"
+31/12/5589,"31-day month, day/month transitions"
+06/12/2832,"Leap Year, 31-day month"
+09/11/6284,"Leap Year, 30-day month"
+10/08/0000,"Leap Year, 31-day month, Min/Max Year"
+06/08/0000,"Leap Year, 31-day month, Min/Max Year"
+08/08/0000,"Leap Year, 31-day month, Min/Max Year"
+04/03/5096,"Leap Year, 31-day month"
+01/10/8156,"Leap Year, 31-day month, day/month transitions"
+23/03/3592,"Leap Year, 31-day month"
+18/08/0000,"Leap Year, 31-day month, Min/Max Year"
+01/09/2297,"30-day month, day/month transitions"
+10/03/5096,"Leap Year, 31-day month"
+06/01/0000,"Leap Year, 31-day month, Min/Max Year"
+13/07/0000,"Leap Year, 31-day month, Min/Max Year"
+08/09/8420,"Leap Year, 30-day month"
+08/15/6280,"Leap Year, Month > 12"
+22/12/5427,31-day month
+31/09/9220,Leap Year
+04/13/9785,Month > 12
+12/13/9885,Month > 12
+26/11/5120,"Leap Year, 30-day month"
+12/11/0092,"Leap Year, 30-day month"
+31/03/3592,"Leap Year, 31-day month, day/month transitions"
+18/12/2832,"Leap Year, 31-day month"
+04/01/0150,31-day month
+01/06/0000,"Leap Year, 30-day month, Min/Max Year, day/month transitions"
+11/11/6384,"Leap Year, 30-day month"
+10/12/1159,31-day month
