@@ -1,0 +1,18 @@
+Test Case,Categories
+07/09/8086,30-day month
+19/03/0000,"Leap Year, 31-day month, Min/Max Year"
+38/04/2782,Day > 31
+23/09/4915,30-day month
+25/02/3426,
+29/12/7944,"Leap Year, 31-day month"
+04/03/8264,"Leap Year, 31-day month"
+18/16/8252,"Leap Year, Month > 12"
+05/05/2648,"Leap Year, 31-day month"
+31/03/8264,"Leap Year, 31-day month, day/month transitions"
+30/12/7944,"Leap Year, 31-day month"
+25/11/8676,"Leap Year, 30-day month"
+30/01/8968,"Leap Year, 31-day month"
+15/11/8676,"Leap Year, 30-day month"
+17/05/2548,"Leap Year, 31-day month"
+31/10/0792,"Leap Year, 31-day month, day/month transitions"
+07/05/2548,"Leap Year, 31-day month"

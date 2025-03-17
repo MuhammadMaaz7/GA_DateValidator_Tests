@@ -1,6 +1,9 @@
 import re
 import random
 import calendar
+import math
+import csv
+import matplotlib.pyplot as plt
 
 def is_valid_date(date_str):
     
@@ -36,6 +39,21 @@ def is_valid_date(date_str):
     
     return True
 
+def initialize_random_population(totalTestCases):
+    population = []
+    count = 0
+    
+    while count < totalTestCases:
+        day = str(random.randint(1,31)).zfill(2)
+        month = str(random.randint(1,12)).zfill(2)
+        year = str(random.randint(0,9999)).zfill(4)
+        population.append(f"{day}/{month}/{year}")
+        count += 1
+    
+    popWithCat = numberOfCategoriesCovered(population)
+    
+    return popWithCat 
+
 def initialize_population(categories,totalTC, TCPerCat):
     population = []
     catTCCount = 0
@@ -51,8 +69,10 @@ def initialize_population(categories,totalTC, TCPerCat):
     while totalTC >0:
         population.append(generate_random())
         totalTC -= 1
+        
+    popWithCat = numberOfCategoriesCovered(population)
     
-    return population  
+    return popWithCat  
 
 def generate_test_case(category):
     if category == "Leap Year":
@@ -109,7 +129,7 @@ def generate31DayMonth():
     return f"{day}/{month}/{year}"
 
 def generateDayGreater31():
-    day = str(random.randint(31,99)).zfill(2)
+    day = str(random.randint(31,40)).zfill(2)
     year = str(random.randint(0,9999)).zfill(4)
     month = str(random.randint(1,12)).zfill(2)
     
@@ -118,7 +138,7 @@ def generateDayGreater31():
 def generateMonthGreater12():
     day = str(random.randint(1,31)).zfill(2)
     year = str(random.randint(0,9999)).zfill(4)
-    month = str(random.randint(13,99)).zfill(2)
+    month = str(random.randint(13,16)).zfill(2)
     
     return f"{day}/{month}/{year}"
 
@@ -154,23 +174,242 @@ def generateDayMonthTransitions():
     
     return f"{day}/{month}/{year}"
             
-def main():
-    categories = ["Leap Year","30-day month","31-day month", "Day > 31", "Month > 12", "Non-leap February 29", "Min/Max Year", "day/month transitions"]
-    selectedCategories = []
-    totalTestCases = 0
+def numberOfCategoriesCovered(population):
+    dates = []
     
-    print("Please Select the Target Categories (1/0)") 
-    for  category in categories:
-        choice = input(f"{category}: ")
+    for date in population:
+        cats = findCoveredCategories(date)
+        dates.append((date,cats))
         
-        if choice == "1":
-            selectedCategories.append(category)
-        else:
-            continue
+    return dates
+    # return [(date, findCoveredCategories(date)) for date in population]
+
+
+def findCoveredCategories(date):
+    categoriesCovered = []
     
+    day,month,year = map(int,date.split('/'))
+    
+    if month <= 12:
+        lastDayOfMonth = calendar.monthrange(year,month)[1]
+    else:
+        lastDayOfMonth = 30
+    
+    if (year % 4 == 0 and year % 100 != 0) or (year % 400 == 0):
+        categoriesCovered.append("Leap Year")
+    
+    if month in [4,6,9,11] and day <= 30:
+        categoriesCovered.append("30-day month")
+    
+    if month in [12,10,8,7,5,3,1] and day <= 31:
+        categoriesCovered.append("31-day month")
+    
+    if day > 31:
+        categoriesCovered.append("Day > 31")
+    
+    if month > 12:
+        categoriesCovered.append("Month > 12")
+    
+    if month == 2 and day == 29 and not isLeapYear(year):
+        categoriesCovered.append("Non-leap February 29")
+    
+    if year == 9999 or year == 0:
+        categoriesCovered.append("Min/Max Year")
+    
+    if day == 1 or day == lastDayOfMonth:
+        categoriesCovered.append("day/month transitions")
+        
+    return categoriesCovered
+       
+def isLeapYear(year):
+    return (year % 4 == 0 and year % 100 != 0) or (year % 400 == 0)
+
+def fitness_function(dates):
+    countCategories = {}
+    fitnessScores = []
+    
+    for date, categories in dates:
+        for category in categories:
+            if category in countCategories:
+                countCategories[category] += 1
+            else:
+                countCategories[category] = 1
+            
+    for date, categories in dates:
+        unique = set(categories)
+        redundant = 0
+        for cat in unique:
+            redundant += countCategories[category]
+        redundant -= len(unique)
+        
+        # redundant = sum(countCategories[category] for category in unique) - len(unique)
+        fit = len(unique) / ( 1+ redundant)
+        fitnessScores.append((date,fit))
+         
+    return fitnessScores
+
+def populationSelection(dates, selectionRatio):
+    fitnessScores = fitness_function(dates)
+    datesSorted = sorted(fitnessScores, key=lambda x: x[1], reverse=True)
+    selectionCount = math.ceil(selectionRatio * len(datesSorted))
+    selectedDates = datesSorted[:selectionCount]
+    nextGenList = [date for date,_ in selectedDates]
+
+    remainingCount = len(dates) - len(nextGenList) 
+
+    repeatedDates = selectedDates * (remainingCount // len(selectedDates)) + selectedDates[:remainingCount % len(selectedDates)]
+    random.shuffle(repeatedDates) 
+    
+    for date,_ in repeatedDates:
+        if len(nextGenList) < len(dates):  
+            nextGenList.append(date)
+    
+    nextGenWithCat = numberOfCategoriesCovered(nextGenList)
+    
+    return nextGenWithCat
+
+def crossoverMutation(populationWithCategories):
+    dates = [date for date,_ in populationWithCategories]
+    crossoverMutationPopulation = []
+    
+    random.shuffle(dates)
+    flag = False
+    if len(dates) % 2 != 0:
+        dates.append(random.choice(dates))
+        flag = True
+    
+    for i in range(0, len(dates),2):
+        par1 = dates[i]
+        par2 = dates[i+1]
+        d1,m1,y1 = map(int, par1.split('/'))
+        d2,m2,y2 = map(int, par2.split('/'))
+        
+        d1 = str(d1).zfill(2)
+        m1 = str(m1).zfill(2)
+        y1 = str(y1).zfill(4)
+        d2 = str(d2).zfill(2)
+        m2 = str(m2).zfill(2)
+        y2 = str(y2).zfill(4)
+        chld1 = f"{d1}/{m2}/{y2}"
+        chld2 = f"{d2}/{m1}/{y1}"
+        
+        chld1 = mutation(chld1) if random.random() < 0.15 else chld1
+        chld2 = mutation(chld1) if random.random() < 0.15 else chld2 
+        
+        crossoverMutationPopulation.extend([chld1,chld2])
+        
+    newPopWithCat = numberOfCategoriesCovered(crossoverMutationPopulation)
+    
+    if flag:
+        return newPopWithCat[:len(dates)-1]
+    else:
+        return newPopWithCat
+    
+def mutation(date):
+    d,m,y = map(int,date.split('/'))
+    d = max(1,min(31,d+random.choice([-3,0,3])))
+    d = max(1,min(12,m+random.choice([-1,0,1])))
+    y = max(0,y + random.choice([-100,0,100]))
+    
+    d = str(d).zfill(2)
+    m = str(m).zfill(2)
+    y = str(y).zfill(4)
+    
+    return f"{d}/{m}/{y}"
+
+def findAccuracy(populationWithCat,selectedCategories):
+    categoriesCovered = set()
+    count = 0
+    
+    for date, categories  in populationWithCat:
+        categoriesCovered.update(categories)
+    
+    # count = sum(1 for cat in selectedCategories if cat in categoriesCovered)
+    
+    for cat in categoriesCovered:
+        if cat in selectedCategories:
+            count += 1        
+    
+    acc = (count / len(selectedCategories)) * 100
+    return acc,categoriesCovered
+    
+def displayCategory(testcasesWithCat,requiredCat):
+    for date,categories in testcasesWithCat:
+        for category in categories:
+            if category in requiredCat:
+                print(date,f" ({category})")
+                
+def addToCsv(testcasesWithCat):
+    with open('test.csv', mode='w', newline="") as f:
+        writer = csv.writer(f)
+        writer.writerow(["Test Case", "Categories"])
+
+        for date, categories in testcasesWithCat:
+            writer.writerow([date,", ".join(categories)])
+
+def makeLineGraph(coverage):
+    plt.figure(figsize=(14,7))
+    gen = list(range(len(coverage)))
+    plt.plot(gen,coverage,marker='o',linestyle='-',color='g',label='GA Coverage (%)')
+    
+    plt.xlabel("Generation")
+    plt.ylabel("COverage(%)")
+    plt.title("Line Graph Visualization for GA Coverage over Generations")
+    plt.grid(True,linestyle='--',alpha=0.9)
+    plt.legend()
+    
+    plt.show()
+               
+def GA():
+    valid = ["Leap Year","30-day month","31-day month"]
+    Invalid = ["Day > 31", "Month > 12", "Non-leap February 29"]
+    Boundaries = ["Min/Max Year", "day/month transitions"]
+    categories = ["Leap Year","30-day month","31-day month", "Day > 31", "Month > 12", "Non-leap February 29", "Min/Max Year", "day/month transitions"]
+    selectedCategories = ["Leap Year","30-day month","31-day month", "Day > 31", "Month > 12", "Non-leap February 29", "Min/Max Year", "day/month transitions"]
+    # selectedCategories = []
     testCasesPerCategory = 1
-    totalTestCases = 25
+    totalTestCases = 0
+    iterations = 0
+    accuracy = 0
+    coveragePerGen = []
     
-    initialize_population(selectedCategories,totalTestCases,testCasesPerCategory)
+    # print("Please Select the Target Categories (1/0)") 
+    # for  category in categories:
+    #     choice = input(f"{category}: ")
+        
+    #     if choice == "1":
+    #         selectedCategories.append(category)
+    #     else:
+    #         continue
     
-main()
+    totalTestCases = input("Enter the number of Total Test Cases Needed: ")
+    while int(totalTestCases) < len(selectedCategories):
+        totalTestCases = input("Total Test Cases must be greater than selected target categories: ")
+    
+    totalTestCases = int(totalTestCases)
+    
+    population = initialize_population(selectedCategories,totalTestCases,testCasesPerCategory)
+        
+    while True:
+        if accuracy >= 90 or iterations == 100:
+            break
+        nextGeneration = populationSelection(population,selectionRatio=0.7)
+        afterCrossover = crossoverMutation(nextGeneration)
+        accuracy,categoriesCovered = findAccuracy(afterCrossover,selectedCategories)
+        iterations += 1
+        coveragePerGen.append(accuracy)
+    
+    print("_________Best Test Cases_________")
+    print()
+    print("_________Valid_________")
+    displayCategory(afterCrossover,valid)
+    print("_________Invalid_________")
+    displayCategory(afterCrossover,Invalid)
+    print("_________Boundary_________")
+    displayCategory(afterCrossover,Boundaries)
+    print()
+    print(f"Coverage Acheived: {accuracy}%")
+    print(f"Generations Executed: {iterations}")
+    addToCsv(afterCrossover)
+    makeLineGraph(coveragePerGen)
+GA()
